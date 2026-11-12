@@ -1,4 +1,4 @@
-fetch('data.json').then(r => r.json()).then(function(DATA){
+fetch('data.json', {cache:'no-cache'}).then(r => r.json()).then(function(DATA){
 const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s_\-.]+/g,'');
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const G = DATA.groups;
@@ -33,7 +33,7 @@ all.forEach(e => {
 Object.keys(KINDS).forEach(k => {
   const chip = document.getElementById('f-'+k);
   if (!G[k]){ if (chip) chip.hidden = true; return; }
-  document.getElementById('n-'+k).textContent = G[k].rows.length.toLocaleString('es-ES');
+  const n = document.getElementById('n-'+k); if (n) n.textContent = G[k].rows.length.toLocaleString('es-ES');
 });
 
 const show = {}; ORDER.forEach(k => show[k] = true);
@@ -82,6 +82,7 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C 
 // Filters
 ORDER.forEach(k => {
   const b = document.getElementById('f-'+k);
+  if (!b) return;
   b.addEventListener('click', () => {
     show[k] = !show[k]; b.setAttribute('aria-pressed', show[k]);
     show[k] ? layers[k].addTo(map) : map.removeLayer(layers[k]);

@@ -1,13 +1,16 @@
 // Cambia VERSION cada vez que subas un data.json o código nuevo:
 // así los móviles descargan la versión nueva la próxima vez que abran la app.
-const VERSION = 'cctt-2026-11-12b';
+const VERSION = 'cctt-2026-11-12c';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'data.json', 'lib/leaflet.js', 'lib/leaflet.css',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const TILES = 'cctt-tiles';
 const MAX_TILES = 3000;
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache:'reload' skips the browser's HTTP cache, so every file comes from the same (new) version
+  e.waitUntil(caches.open(VERSION)
+    .then(c => c.addAll(SHELL.map(u => new Request(u, {cache: 'reload'}))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -35,11 +38,12 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // App files and data: cache first, update in background
+  // App files and data: always ask the server first (cheap when unchanged),
+  // use the saved copy only when there is no connection
   if (url.origin === location.origin){
-    e.respondWith(caches.match(req, {ignoreSearch: true}).then(hit => {
-      const net = fetch(req).then(res => { if (res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); } return res; }).catch(() => hit);
-      return hit || net;
-    }));
+    e.respondWith(fetch(req, {cache: 'no-cache'}).then(res => {
+      if (res.ok){ const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req, {ignoreSearch: true})));
   }
 });
