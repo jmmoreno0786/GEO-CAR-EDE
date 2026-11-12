@@ -33,6 +33,12 @@ Si eso es un problema, publícala en un servidor interno o detrás de un acceso 
 2. En `sw.js`, cambia `VERSION` (por ejemplo, pon la fecha del día).
 3. Sube `data.json` y `sw.js` al servidor. Los móviles cogen la versión nueva al volver a abrir la app.
 
+## Capas
+
+- **CT Endesa** y **CT externos** salen encendidas al abrir la app.
+- **Maniobra** y **Apoyos MT** salen apagadas. Al encenderlas solo se dibujan los de la zona visible, con el mapa acercado.
+- El buscador encuentra elementos de todas las capas, estén encendidas o no.
+
 ## Mapa de fondo
 
 - Por defecto se usa el **Mapa base del IGN** y, con el botón de capas, la **ortofoto PNOA**. Las dos tienen licencia CC BY 4.0 del Instituto Geográfico Nacional.

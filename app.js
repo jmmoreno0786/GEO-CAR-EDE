@@ -10,11 +10,11 @@ const KINDS = {
   ext:    { name:'CT externo', search:['Alias','Linea MT','Subestación','Id Nodo'],
             eyebrow: e => ['CT externo', e.f['Propietario'], e.f['Tipo Construcción']].filter(Boolean).join(' · '),
             sub: e => ['CT externo', e.f['Propietario'], e.f['Linea MT'] && 'Línea ' + e.f['Linea MT'], e.f['Subestación'] && 'SET ' + e.f['Subestación']].filter(Boolean).join(' · ') },
-  ddmm:   { name:'Elemento de maniobra', search:['Alias','Línea MT','Tipo de Operación'],
+  // Maniobra and apoyos start switched off; when switched on, only those near the view are drawn (minZoom)
+  ddmm:   { name:'Elemento de maniobra', plural:'elementos de maniobra', search:['Alias','Línea MT','Tipo de Operación'], off:true, minZoom:14,
             eyebrow: e => ['Elemento de maniobra', e.f['Propietario']].filter(Boolean).join(' · '),
             sub: e => ['Maniobra', e.f['Tipo de Operación'], e.f['Línea MT'] && 'Línea ' + e.f['Línea MT']].filter(Boolean).join(' · ') },
-  // 33.000 supports: only drawn when zoomed in (minZoom), and only those in view
-  apoyo:  { name:'Apoyo MT', search:['Nombre del municipio'], minZoom:15,
+  apoyo:  { name:'Apoyo MT', plural:'apoyos', search:['Nombre del municipio'], off:true, minZoom:15,
             eyebrow: e => ['Apoyo MT', e.f['Nombre del municipio']].filter(Boolean).join(' · '),
             sub: e => ['Apoyo MT', known(e.f['Material']), known(e.f['Estructura']), e.f['Nombre del municipio']].filter(Boolean).join(' · ') }
 };
@@ -41,7 +41,10 @@ Object.keys(KINDS).forEach(k => {
   const n = document.getElementById('n-'+k); if (n) n.textContent = String(G[k].rows.length).replace(/\B(?=(\d{3})+$)/g, '.');
 });
 
-const show = {}; ORDER.forEach(k => show[k] = true);
+const show = {}; ORDER.forEach(k => {
+  show[k] = !KINDS[k].off;
+  const chip = document.getElementById('f-'+k); if (chip) chip.setAttribute('aria-pressed', show[k]);
+});
 
 // Map
 const map = L.map('map', {preferCanvas:true, zoomControl:false, attributionControl:true}).setView([37.18,-3.6], 10);
@@ -86,7 +89,7 @@ all.forEach(e => {
   const key = Math.floor(e.lat*CELL) + ':' + Math.floor(e.lon*CELL);
   ((grid[e.kind] ||= {})[key] ||= []).push(e);
 });
-ORDER.forEach(k => { layers[k].addTo(map); visibleLazy[k] = new Set(); });
+ORDER.forEach(k => { if (show[k]) layers[k].addTo(map); visibleLazy[k] = new Set(); });
 function refreshLazy(){
   const z = map.getZoom(), b = map.getBounds().pad(0.25);
   ORDER.forEach(k => {
@@ -119,8 +122,7 @@ ORDER.forEach(k => {
     show[k] = !show[k]; b.setAttribute('aria-pressed', show[k]);
     show[k] ? layers[k].addTo(map) : map.removeLayer(layers[k]);
     refreshLazy();
-    if (show[k] && KINDS[k].minZoom && map.getZoom() < KINDS[k].minZoom) toast('Acerca el mapa para ver los ' + (k === 'apoyo' ? 'apoyos' : 'puntos') + '. El buscador los encuentra siempre.');
-    runSearch();
+    if (show[k] && KINDS[k].minZoom && map.getZoom() < KINDS[k].minZoom) toast('Acerca el mapa para ver los ' + KINDS[k].plural + ' de la zona.');
   });
 });
 
@@ -139,7 +141,6 @@ function runSearch(){
   if (!n){ res.hidden = true; current = []; return; }
   const hits = [];
   for (const ct of all){
-    if (!show[ct.kind]) continue;
     let s = -1;
     if (ct.k === n) s = 0;
     else if (ct.k.startsWith(n) || ct.k.replace(/^[a-z]+/,'').startsWith(n)) s = 1;
@@ -175,9 +176,14 @@ map.on('click', () => { res.hidden = true; });
 // Selection + navigation sheet
 const sheet = document.getElementById('sheet');
 let selected = null;
+const picked = L.layerGroup().addTo(map);
 function select(ct, fly){
   selected = ct; res.hidden = true; q.blur();
-  selRing.setLatLng([ct.lat, ct.lon]).addTo(map); if (ct.m && map.hasLayer(ct.m)) ct.m.bringToFront();
+  selRing.setLatLng([ct.lat, ct.lon]).addTo(map);
+  // An element found by search may belong to a layer that is off or not drawn yet: show its dot anyway
+  picked.clearLayers();
+  if (!(ct.m && map.hasLayer(ct.m))) picked.addLayer(L.circleMarker([ct.lat, ct.lon], markerStyle(ct)));
+  else ct.m.bringToFront();
   renderSheet(ct);
   const z = fly ? Math.max(map.getZoom(), 17) : map.getZoom();
   const wide = matchMedia('(min-width:760px)').matches;
@@ -229,7 +235,7 @@ function renderSheet(ct){
     try { navigator.clipboard.writeText(ll).then(done, fallback); } catch(e){ fallback(); }
   };
 }
-function closeSheet(){ sheet.hidden = true; document.body.classList.remove('sheet-open'); map.removeLayer(selRing); selected = null; try{ history.replaceState(null,'',location.pathname + location.search); }catch(e){} }
+function closeSheet(){ picked.clearLayers(); sheet.hidden = true; document.body.classList.remove('sheet-open'); map.removeLayer(selRing); selected = null; try{ history.replaceState(null,'',location.pathname + location.search); }catch(e){} }
 
 let tt; function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(()=>t.hidden=true, 2600); }
 
