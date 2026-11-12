@@ -1,17 +1,17 @@
 # CCTT Granada: app web instalable
 
-Buscador de los centros de transformación del KMZ, con botones para ir hasta cada uno con la app de navegación del móvil.
+Buscador de los centros de transformación y de los elementos de maniobra, con botones para ir hasta cada uno con la app de navegación del móvil.
 
 ## Qué hay en la carpeta
 
 | Archivo | Para qué sirve |
 |---|---|
 | `index.html`, `styles.css`, `app.js` | La app |
-| `data.json` | Los CT (sale del KMZ) |
+| `data.json` | Los CT y los elementos de maniobra (sale de los KMZ) |
 | `lib/` | Librería de mapas Leaflet 1.9.4 |
 | `manifest.webmanifest`, `icons/` | Hacen que se pueda instalar como app |
 | `sw.js` | Guarda la app en el móvil para que abra sin cobertura |
-| `herramientas/kmz_a_datos.py` | Regenera `data.json` cuando cambie el KMZ |
+| `herramientas/kmz_a_datos.py` | Regenera `data.json` cuando cambien los KMZ |
 
 ## Publicarla
 
@@ -26,9 +26,10 @@ Si eso es un problema, publícala en un servidor interno o detrás de un acceso 
 - **Android (Chrome):** abre la dirección, pulsa ⋮ y luego «Instalar aplicación» o «Añadir a pantalla de inicio».
 - **iPhone (Safari):** abre la dirección, pulsa Compartir y luego «Añadir a pantalla de inicio».
 
-## Actualizar los CT
+## Actualizar los datos
 
-1. Ejecuta `python3 herramientas/kmz_a_datos.py NUEVO.kmz data.json`
+1. Ejecuta `python3 herramientas/kmz_a_datos.py data.json CDs.kmz Elementos_de_maniobra.kmz`.
+   Puedes pasarle solo uno de los dos KMZ: la otra capa se conserva como estaba.
 2. En `sw.js`, cambia `VERSION` (por ejemplo, pon la fecha del día).
 3. Sube `data.json` y `sw.js` al servidor. Los móviles cogen la versión nueva al volver a abrir la app.
 

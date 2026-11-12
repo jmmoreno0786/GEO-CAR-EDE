@@ -5,7 +5,8 @@ body{margin:0}
 :root{
   --bg:#eef1f4; --surface:#ffffff; --fg:#17212b; --muted:#5b6876; --line:#d5dbe2;
   --accent:#1f5fbf; --accent-fg:#ffffff;
-  --endesa:#178a5a; --ext:#d9771b; --sel:#c2185b;
+  --endesa:#178a5a; --ext:#d9771b; --ddmm:#6a43c9; --sel:#c2185b; --ring:#ffffff;
+  --open-bg:#fde8e8; --open-fg:#a3201c; --closed-bg:#e3f1ea; --closed-fg:#17603f;
   --shadow:0 6px 24px rgba(15,30,50,.18);
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -13,12 +14,14 @@ body{margin:0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10161d; --surface:#18212b; --fg:#e6ebf0; --muted:#97a3b0; --line:#2b3744;
   --accent:#6ea2f0; --accent-fg:#0b1420;
-  --endesa:#3cc489; --ext:#f29a45; --sel:#f06292;
+  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --sel:#f06292;
+  --open-bg:#4a1c1c; --open-fg:#ffb3ad; --closed-bg:#173a2a; --closed-fg:#8fe0b6;
   --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10161d; --surface:#18212b; --fg:#e6ebf0; --muted:#97a3b0; --line:#2b3744;
   --accent:#6ea2f0; --accent-fg:#0b1420;
-  --endesa:#3cc489; --ext:#f29a45; --sel:#f06292;
+  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --sel:#f06292;
+  --open-bg:#4a1c1c; --open-fg:#ffb3ad; --closed-bg:#173a2a; --closed-fg:#8fe0b6;
   --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;overflow:hidden}
@@ -28,7 +31,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px
 .leaflet-control-attribution{font-size:10px}
 
 /* top bar */
-#top{position:absolute;z-index:1000;top:10px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
+#top{position:absolute;z-index:1150;top:10px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
   max-width:460px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 #top>*{pointer-events:auto}
 .searchbox{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:4px 4px 4px 12px}
@@ -52,7 +55,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px
 .res{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--fg);padding:10px 14px;cursor:pointer;font:inherit}
 .res:last-child{border-bottom:0}
 .res:hover,.res.active{background:var(--bg)}
-.res .dot{flex:none;width:10px;height:10px;border-radius:50%}
+.res .dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.dot.open{background:var(--ring)!important;box-shadow:inset 0 0 0 2.5px var(--c)}
 .res .code{font:600 15px var(--mono)}
 .res .sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .res .txt{display:flex;flex-direction:column;min-width:0}
@@ -74,7 +78,10 @@ body.sheet-open #side{bottom:calc(var(--sheet-h,0px) + 16px)}
 .sh-head{display:flex;align-items:flex-start;gap:12px}
 .sh-head .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .eyebrow{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
-.eyebrow .dot{width:9px;height:9px;border-radius:50%}
+.eyebrow .dot{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.state{display:inline-block;vertical-align:middle;margin-left:10px;padding:3px 8px;border-radius:6px;font:600 12px var(--sans);letter-spacing:.06em}
+.state.is-open{background:var(--open-bg);color:var(--open-fg)}
+.state.is-closed{background:var(--closed-bg);color:var(--closed-fg)}
 .sh-code{font:600 28px/1.1 var(--mono);letter-spacing:-.01em;overflow-wrap:anywhere}
 .coords{font:500 13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
 .nav-title{font-size:13px;font-weight:600;color:var(--muted)}

@@ -1,21 +1,42 @@
 fetch('data.json').then(r => r.json()).then(function(DATA){
-const F = DATA.fields; // Código, Alias, Propietario, Tensión, Linea MT, Subestación, Zona, Nº clientes, Nº trafos, Pot. inst., Pot. contr., Tipo, UOT, Id Nodo
-const iLinea = F.indexOf('Linea MT'), iSub = F.indexOf('Subestación'), iProp = F.indexOf('Propietario'), iAlias = F.indexOf('Alias'), iNodo = F.indexOf('Id Nodo'), iTipo = F.indexOf('Tipo Construcción');
 const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s_\-.]+/g,'');
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const G = DATA.groups;
 
-// Build one list of all CTs
+// How each layer is labelled and searched. `search` lists the extra fields the search box looks into.
+const KINDS = {
+  endesa: { name:'CT Endesa', search:[],
+            eyebrow: () => 'CT Endesa', sub: () => 'CT Endesa' },
+  ext:    { name:'CT externo', search:['Alias','Linea MT','Subestación','Id Nodo'],
+            eyebrow: e => ['CT externo', e.f['Propietario'], e.f['Tipo Construcción']].filter(Boolean).join(' · '),
+            sub: e => ['CT externo', e.f['Propietario'], e.f['Linea MT'] && 'Línea ' + e.f['Linea MT'], e.f['Subestación'] && 'SET ' + e.f['Subestación']].filter(Boolean).join(' · ') },
+  ddmm:   { name:'Elemento de maniobra', search:['Alias','Línea MT','Tipo de Operación'],
+            eyebrow: e => ['Elemento de maniobra', e.f['Propietario']].filter(Boolean).join(' · '),
+            sub: e => ['Maniobra', e.f['Tipo de Operación'], e.f['Línea MT'] && 'Línea ' + e.f['Línea MT']].filter(Boolean).join(' · ') }
+};
+const ORDER = Object.keys(KINDS).filter(k => G[k]);
+
+// Build one list of every element
 const all = [];
-DATA.endesa.forEach(r => all.push({kind:'endesa', code:r[0], lat:r[1], lon:r[2]}));
-DATA.ext.forEach(r => all.push({kind:'ext', code:r[0], lat:r[1], lon:r[2], v:r.slice(3)}));
-all.forEach(ct => {
-  ct.k = norm(ct.code);
-  ct.extra = ct.kind==='ext' ? [ct.v[iAlias], ct.v[iLinea], ct.v[iSub], ct.v[iNodo]].map(norm).join('|') : '';
+ORDER.forEach(kind => {
+  const fields = G[kind].fields;
+  G[kind].rows.forEach(r => {
+    const f = {}; fields.forEach((name,i) => { f[name] = r[3+i]; });
+    all.push({kind, code:r[0], lat:r[1], lon:r[2], f, fields});
+  });
 });
-document.getElementById('n-endesa').textContent = DATA.endesa.length.toLocaleString('es-ES');
-document.getElementById('n-ext').textContent = DATA.ext.length.toLocaleString('es-ES');
+all.forEach(e => {
+  e.k = norm(e.code);
+  e.extra = KINDS[e.kind].search.map(n => norm(e.f[n])).filter(Boolean).join('|');
+  e.open = e.f['Tipo de Operación'] === 'ABIERTO';
+});
+Object.keys(KINDS).forEach(k => {
+  const chip = document.getElementById('f-'+k);
+  if (!G[k]){ if (chip) chip.hidden = true; return; }
+  document.getElementById('n-'+k).textContent = G[k].rows.length.toLocaleString('es-ES');
+});
 
-const show = {endesa:true, ext:true};
+const show = {}; ORDER.forEach(k => show[k] = true);
 
 // Map
 const map = L.map('map', {preferCanvas:true, zoomControl:false, attributionControl:true}).setView([37.18,-3.6], 10);
@@ -35,21 +56,31 @@ let streets = ignBase, base = ignBase.addTo(map), tileFails = 0, tileOk = 0;
   l.on('tileload', () => { tileOk++; document.getElementById('tilenote').hidden = true; });
 });
 const renderer = L.canvas({padding:0.3});
-const layers = {endesa:L.layerGroup(), ext:L.layerGroup()};
-function colors(){ return {endesa:css('--endesa'), ext:css('--ext'), sel:css('--sel')}; }
+const layers = {}; ORDER.forEach(k => layers[k] = L.layerGroup());
+// Normally-open switching points are drawn hollow so they stand out
+// Dots shrink when zoomed out so the three layers don't bury each other
+const dotSize = z => z >= 15 ? 5 : z >= 13 ? 4 : z >= 11 ? 3 : 2.2;
+let R = dotSize(map.getZoom());
+function markerStyle(e){
+  const thin = R < 4;
+  return e.open ? {renderer, radius:R, weight:thin ? 2 : 3, color:C[e.kind], fillColor:C.ring, fillOpacity:1}
+                : {renderer, radius:R, weight:thin ? 0.8 : 1.5, color:C.ring, fillColor:C[e.kind], fillOpacity:.95};
+}
+function colors(){ const c = {sel:css('--sel'), ring:css('--ring')}; ORDER.forEach(k => c[k] = css('--'+k)); return c; }
 let C = colors();
 all.forEach(ct => {
-  ct.m = L.circleMarker([ct.lat, ct.lon], {renderer, radius:5, weight:1.5, color:'#ffffff', fillColor:C[ct.kind], fillOpacity:.95});
+  ct.m = L.circleMarker([ct.lat, ct.lon], markerStyle(ct));
   ct.m.on('click', () => select(ct, false));
   layers[ct.kind].addLayer(ct.m);
 });
-layers.endesa.addTo(map); layers.ext.addTo(map);
+ORDER.forEach(k => layers[k].addTo(map));
+map.on('zoomend', () => { const r = dotSize(map.getZoom()); if (r !== R){ R = r; all.forEach(e => e.m.setStyle(markerStyle(e))); } });
 map.fitBounds(L.latLngBounds(all.map(c=>[c.lat,c.lon])), {padding:[20,20]});
 const selRing = L.circleMarker([0,0], {renderer, radius:12, weight:3, color:C.sel, fill:false, interactive:false});
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = colors(); all.forEach(ct=>ct.m.setStyle({fillColor:C[ct.kind]})); selRing.setStyle({color:C.sel}); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = colors(); all.forEach(ct=>ct.m.setStyle(markerStyle(ct))); selRing.setStyle({color:C.sel}); });
 
 // Filters
-['endesa','ext'].forEach(k => {
+ORDER.forEach(k => {
   const b = document.getElementById('f-'+k);
   b.addEventListener('click', () => {
     show[k] = !show[k]; b.setAttribute('aria-pressed', show[k]);
@@ -76,17 +107,17 @@ function runSearch(){
     if (!show[ct.kind]) continue;
     let s = -1;
     if (ct.k === n) s = 0;
-    else if (ct.k.startsWith(n) || ct.k.replace(/^p/,'').startsWith(n)) s = 1;
+    else if (ct.k.startsWith(n) || ct.k.replace(/^[a-z]+/,'').startsWith(n)) s = 1;
     else if (ct.k.includes(n)) s = 2;
     else if (ct.extra && ct.extra.includes(n)) s = 3;
     if (s >= 0) hits.push([s, ct]);
   }
   hits.sort((a,b) => a[0]-b[0] || a[1].k.length-b[1].k.length || a[1].k.localeCompare(b[1].k));
   current = hits.slice(0, 60).map(h=>h[1]); activeIdx = -1;
-  let html = `<div class="meta">${hits.length ? hits.length.toLocaleString('es-ES') + (hits.length===1?' resultado':' resultados') + (hits.length>60?' · mostrando 60':'') : 'Ningún CT coincide con «'+esc(raw)+'». Prueba con el número sin la P o con parte del código.'}</div>`;
+  let html = `<div class="meta">${hits.length ? hits.length.toLocaleString('es-ES') + (hits.length===1?' resultado':' resultados') + (hits.length>60?' · mostrando 60':'') : 'Nada coincide con «'+esc(raw)+'». Prueba con parte del código, sin la letra inicial, o con el nombre de la línea.'}</div>`;
   current.forEach((ct,i) => {
-    const sub = ct.kind==='endesa' ? 'Endesa' : [ct.v[iProp], ct.v[iLinea] && 'Línea ' + ct.v[iLinea], ct.v[iSub] && 'SET ' + ct.v[iSub]].filter(Boolean).join(' · ');
-    html += `<button class="res" type="button" data-i="${i}"><span class="dot" style="background:var(--${ct.kind})"></span><span class="txt"><span class="code">${hl(ct.code, raw)}</span><span class="sub">${ct.kind==='ext'? hl(sub, raw) : esc(sub)}</span></span></button>`;
+    const sub = KINDS[ct.kind].sub(ct);
+    html += `<button class="res" type="button" data-i="${i}"><span class="dot${ct.open?' open':''}" style="--c:var(--${ct.kind})"></span><span class="txt"><span class="code">${hl(ct.code, raw)}</span><span class="sub">${hl(sub, raw)}</span></span></button>`;
   });
   res.innerHTML = html; res.hidden = false;
 }
@@ -122,24 +153,24 @@ function select(ct, fly){
 }
 function renderSheet(ct){
   const ll = ct.lat.toFixed(6) + ',' + ct.lon.toFixed(6);
-  const label = encodeURIComponent('CT ' + ct.code);
+  const label = encodeURIComponent(ct.code);
   const links = {
     google: `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=driving`,
     waze:   `https://waze.com/ul?ll=${ll}&navigate=yes`,
     apple:  `https://maps.apple.com/?daddr=${ll}&dirflg=d`,
     geo:    `geo:${ll}?q=${ll}(${label})`
   };
-  let det = '';
-  if (ct.kind === 'ext'){
-    det = '<table class="det"><tbody>' + F.map((f,i) => (i===0 || ct.v[i]==='' ) ? '' : `<tr><td>${esc(f)}</td><td>${esc(ct.v[i])}</td></tr>`).join('') + '</tbody></table>';
-  }
-  const eyebrow = ct.kind==='endesa' ? 'CT Endesa' : 'CT externo · ' + esc(ct.v[iProp] || '') + (ct.v[iTipo] ? ' · ' + esc(ct.v[iTipo]) : '');
+  const rows = ct.fields.filter(n => ct.f[n] && !(n === 'Alias' && ct.f[n] === ct.code));
+  const det = rows.length ? '<table class="det"><tbody>' + rows.map(n => `<tr><td>${esc(n)}</td><td>${esc(ct.f[n])}</td></tr>`).join('') + '</tbody></table>' : '';
+  const eyebrow = esc(KINDS[ct.kind].eyebrow(ct));
+  const op = ct.f['Tipo de Operación'];
+  const state = op ? `<span class="state ${op === 'ABIERTO' ? 'is-open' : 'is-closed'}">${esc(op)}</span>` : '';
   sheet.innerHTML = `
     <div class="grab"></div>
     <div class="sh-head">
       <div class="t">
-        <span class="eyebrow"><span class="dot" style="background:var(--${ct.kind})"></span>${eyebrow}</span>
-        <span class="sh-code">${esc(ct.code)}</span>
+        <span class="eyebrow"><span class="dot${ct.open?' open':''}" style="--c:var(--${ct.kind})"></span>${eyebrow}</span>
+        <span class="sh-code">${esc(ct.code)}${state}</span>
         <span class="coords" id="coords">${ll}</span>
       </div>
       <button class="iconbtn" id="sh-close" type="button" aria-label="Cerrar ficha"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
@@ -185,7 +216,7 @@ document.getElementById('b-loc').addEventListener('click', () => {
     map.flyTo(ll, 16, {duration:.6});
     // nearest visible CT
     let best=null, bd=Infinity; for (const ct of all){ if(!show[ct.kind]) continue; const d = map.distance(ll,[ct.lat,ct.lon]); if (d<bd){bd=d;best=ct;} }
-    if (best) toast('CT más cercano: ' + best.code + ' a ' + (bd<1000? Math.round(bd)+' m' : (bd/1000).toFixed(1)+' km'));
+    if (best) toast('Lo más cercano: ' + best.code + ' a ' + (bd<1000? Math.round(bd)+' m' : (bd/1000).toFixed(1)+' km'));
   }, () => toast('No se pudo obtener tu ubicación. Revisa el permiso de ubicación del navegador.'), {enableHighAccuracy:true, timeout:10000});
 });
 
@@ -195,4 +226,4 @@ function fromHash(){
   const ct = all.find(c => c.code.replace(/[^A-Za-z0-9-]/g,'') === m[1]); if (ct && ct !== selected) select(ct, true);
 }
 window.addEventListener('hashchange', fromHash); fromHash();
-}).catch(e => { document.getElementById('tilenote').textContent = 'No se pudieron cargar los datos de los CT. Comprueba la conexión y vuelve a abrir la app.'; document.getElementById('tilenote').hidden = false; });
+}).catch(e => { document.getElementById('tilenote').textContent = 'No se pudieron cargar los datos. Comprueba la conexión y vuelve a abrir la app.'; document.getElementById('tilenote').hidden = false; });

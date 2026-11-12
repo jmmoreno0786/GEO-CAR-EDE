@@ -1,6 +1,6 @@
 // Cambia VERSION cada vez que subas un data.json o código nuevo:
 // así los móviles descargan la versión nueva la próxima vez que abran la app.
-const VERSION = 'cctt-2026-11-12';
+const VERSION = 'cctt-2026-11-12b';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'data.json', 'lib/leaflet.js', 'lib/leaflet.css',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const TILES = 'cctt-tiles';
