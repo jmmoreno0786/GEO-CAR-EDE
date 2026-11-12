@@ -1,11 +1,12 @@
-"""Genera data.json a partir de los KMZ de CCTT y de elementos de maniobra.
+"""Genera data.json a partir de los KMZ de CCTT, elementos de maniobra y apoyos de MT.
 
-Uso:  python3 herramientas/kmz_a_datos.py data.json CDs.kmz Elementos_de_maniobra.kmz
+Uso:  python3 herramientas/kmz_a_datos.py data.json CDs.kmz Elementos_de_maniobra.kmz Apoyos_MT.kmz
 
 Se le pueden pasar uno o varios KMZ: cada capa se busca por el nombre de su carpeta.
   - «Nombres CCTT ENDESA»  -> CT de Endesa (código + posición)
   - «CCTT EXTERNOS»        -> CT externos (código + posición + ficha)
   - «DDMM_sub»             -> elementos de maniobra (código + posición + ficha)
+  - «Apoyo MT ENDESA»      -> apoyos de MT (código + posición + ficha)
 Si un KMZ no trae una capa, se conserva la que ya hubiera en data.json.
 Después sube el data.json nuevo y cambia VERSION en sw.js para que los móviles lo descarguen.
 """
@@ -50,16 +51,31 @@ def with_sheet(folder):
         for k in vals:
             if k not in order:
                 order.append(k)
-    # Drop the code column (it is the title) and columns that are empty everywhere
-    fields = [f for f in order if f != 'Código' and any(v.get(f, '').strip() for *_, v in recs)]
-    rows = [[c, la, lo] + [v.get(f, '').strip() for f in fields] for c, la, lo, v in recs]
-    return {'fields': fields, 'rows': rows}
+    # Drop columns that repeat the code (it is the title) and columns that are empty everywhere
+    fields = [f for f in order
+              if f != 'Código'
+              and any(v.get(f, '').strip() for *_, v in recs)
+              and not all(v.get(f, '').strip() == c for c, *_, v in recs)]
+    # Columns with few distinct values are stored as a list + index to keep data.json small
+    enums = {}
+    for f in fields:
+        vals = sorted({v.get(f, '').strip() for *_, v in recs})
+        if len(vals) <= 400 and len(recs) > 2000:
+            enums[f] = vals
+    idx = {f: {s: i for i, s in enumerate(vals)} for f, vals in enums.items()}
+    rows = [[c, la, lo] + [idx[f][v.get(f, '').strip()] if f in idx else v.get(f, '').strip() for f in fields]
+            for c, la, lo, v in recs]
+    out = {'fields': fields, 'rows': rows}
+    if enums:
+        out['enums'] = enums
+    return out
 
 
 LAYERS = {
     'endesa': ('Nombres CCTT ENDESA', plain),
     'ext': ('CCTT EXTERNOS', with_sheet),
     'ddmm': ('DDMM_sub', with_sheet),
+    'apoyo': ('Apoyo MT ENDESA', with_sheet),
 }
 
 

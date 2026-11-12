@@ -5,7 +5,7 @@ body{margin:0}
 :root{
   --bg:#eef1f4; --surface:#ffffff; --fg:#17212b; --muted:#5b6876; --line:#d5dbe2;
   --accent:#1f5fbf; --accent-fg:#ffffff;
-  --endesa:#178a5a; --ext:#d9771b; --ddmm:#6a43c9; --sel:#c2185b; --ring:#ffffff;
+  --endesa:#178a5a; --ext:#d9771b; --ddmm:#6a43c9; --apoyo:#5a6b7b; --sel:#c2185b; --ring:#ffffff;
   --open-bg:#fde8e8; --open-fg:#a3201c; --closed-bg:#e3f1ea; --closed-fg:#17603f;
   --shadow:0 6px 24px rgba(15,30,50,.18);
   --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -14,13 +14,13 @@ body{margin:0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#10161d; --surface:#18212b; --fg:#e6ebf0; --muted:#97a3b0; --line:#2b3744;
   --accent:#6ea2f0; --accent-fg:#0b1420;
-  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --sel:#f06292;
+  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --apoyo:#a9b8c6; --sel:#f06292;
   --open-bg:#4a1c1c; --open-fg:#ffb3ad; --closed-bg:#173a2a; --closed-fg:#8fe0b6;
   --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10161d; --surface:#18212b; --fg:#e6ebf0; --muted:#97a3b0; --line:#2b3744;
   --accent:#6ea2f0; --accent-fg:#0b1420;
-  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --sel:#f06292;
+  --endesa:#3cc489; --ext:#f29a45; --ddmm:#a98bf5; --apoyo:#a9b8c6; --sel:#f06292;
   --open-bg:#4a1c1c; --open-fg:#ffb3ad; --closed-bg:#173a2a; --closed-fg:#8fe0b6;
   --shadow:0 6px 24px rgba(0,0,0,.5); color-scheme:dark}
 html,body{height:100%}
@@ -48,6 +48,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px
 .chip .dot{width:10px;height:10px;border-radius:50%}
 .chip[aria-pressed="false"]{color:var(--muted)}
 .chip[aria-pressed="false"] .dot{background:transparent!important;border:2px solid currentColor;width:6px;height:6px}
+.chip.far{opacity:.6}
+.chip.far::after{content:"acerca";font:500 11px var(--sans);color:var(--muted)}
 .chip .n{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
 
 #results{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);max-height:min(52vh,420px);overflow-y:auto;overscroll-behavior:contain}

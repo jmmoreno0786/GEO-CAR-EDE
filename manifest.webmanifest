@@ -1,7 +1,7 @@
 {
   "name": "CCTT Granada",
   "short_name": "CCTT",
-  "description": "Buscador de centros de transformación y elementos de maniobra con navegación hasta cada uno.",
+  "description": "Buscador de centros de transformación, elementos de maniobra y apoyos de MT con navegación hasta cada uno.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",

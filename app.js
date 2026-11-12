@@ -12,16 +12,21 @@ const KINDS = {
             sub: e => ['CT externo', e.f['Propietario'], e.f['Linea MT'] && 'Línea ' + e.f['Linea MT'], e.f['Subestación'] && 'SET ' + e.f['Subestación']].filter(Boolean).join(' · ') },
   ddmm:   { name:'Elemento de maniobra', search:['Alias','Línea MT','Tipo de Operación'],
             eyebrow: e => ['Elemento de maniobra', e.f['Propietario']].filter(Boolean).join(' · '),
-            sub: e => ['Maniobra', e.f['Tipo de Operación'], e.f['Línea MT'] && 'Línea ' + e.f['Línea MT']].filter(Boolean).join(' · ') }
+            sub: e => ['Maniobra', e.f['Tipo de Operación'], e.f['Línea MT'] && 'Línea ' + e.f['Línea MT']].filter(Boolean).join(' · ') },
+  // 33.000 supports: only drawn when zoomed in (minZoom), and only those in view
+  apoyo:  { name:'Apoyo MT', search:['Nombre del municipio'], minZoom:15,
+            eyebrow: e => ['Apoyo MT', e.f['Nombre del municipio']].filter(Boolean).join(' · '),
+            sub: e => ['Apoyo MT', known(e.f['Material']), known(e.f['Estructura']), e.f['Nombre del municipio']].filter(Boolean).join(' · ') }
 };
+function known(v){ return v && !/^(not defined|desconocido|otros)$/i.test(v) ? v : ''; }
 const ORDER = Object.keys(KINDS).filter(k => G[k]);
 
 // Build one list of every element
 const all = [];
 ORDER.forEach(kind => {
-  const fields = G[kind].fields;
+  const fields = G[kind].fields, enums = G[kind].enums || {};
   G[kind].rows.forEach(r => {
-    const f = {}; fields.forEach((name,i) => { f[name] = r[3+i]; });
+    const f = {}; fields.forEach((name,i) => { const v = r[3+i]; f[name] = enums[name] ? enums[name][v] : v; });
     all.push({kind, code:r[0], lat:r[1], lon:r[2], f, fields});
   });
 });
@@ -33,7 +38,7 @@ all.forEach(e => {
 Object.keys(KINDS).forEach(k => {
   const chip = document.getElementById('f-'+k);
   if (!G[k]){ if (chip) chip.hidden = true; return; }
-  const n = document.getElementById('n-'+k); if (n) n.textContent = G[k].rows.length.toLocaleString('es-ES');
+  const n = document.getElementById('n-'+k); if (n) n.textContent = String(G[k].rows.length).replace(/\B(?=(\d{3})+$)/g, '.');
 });
 
 const show = {}; ORDER.forEach(k => show[k] = true);
@@ -68,16 +73,43 @@ function markerStyle(e){
 }
 function colors(){ const c = {sel:css('--sel'), ring:css('--ring')}; ORDER.forEach(k => c[k] = css('--'+k)); return c; }
 let C = colors();
-all.forEach(ct => {
-  ct.m = L.circleMarker([ct.lat, ct.lon], markerStyle(ct));
-  ct.m.on('click', () => select(ct, false));
-  layers[ct.kind].addLayer(ct.m);
+function ensureMarker(e){
+  if (!e.m){ e.m = L.circleMarker([e.lat, e.lon], markerStyle(e)); e.m.on('click', () => select(e, false)); }
+  return e.m;
+}
+// Eager layers get all their markers now; lazy layers (minZoom) get a grid index instead
+const CELL = 50; // 1/50 degree ≈ 2 km cells
+const grid = {}, visibleLazy = {};
+all.forEach(e => {
+  const minZ = KINDS[e.kind].minZoom;
+  if (!minZ){ layers[e.kind].addLayer(ensureMarker(e)); return; }
+  const key = Math.floor(e.lat*CELL) + ':' + Math.floor(e.lon*CELL);
+  ((grid[e.kind] ||= {})[key] ||= []).push(e);
 });
-ORDER.forEach(k => layers[k].addTo(map));
-map.on('zoomend', () => { const r = dotSize(map.getZoom()); if (r !== R){ R = r; all.forEach(e => e.m.setStyle(markerStyle(e))); } });
+ORDER.forEach(k => { layers[k].addTo(map); visibleLazy[k] = new Set(); });
+function refreshLazy(){
+  const z = map.getZoom(), b = map.getBounds().pad(0.25);
+  ORDER.forEach(k => {
+    const minZ = KINDS[k].minZoom; if (!minZ) return;
+    const want = new Set();
+    if (show[k] && z >= minZ){
+      for (let i = Math.floor(b.getSouth()*CELL); i <= Math.floor(b.getNorth()*CELL); i++)
+        for (let j = Math.floor(b.getWest()*CELL); j <= Math.floor(b.getEast()*CELL); j++)
+          (grid[k][i+':'+j] || []).forEach(e => { if (b.contains([e.lat, e.lon])) want.add(e); });
+    }
+    visibleLazy[k].forEach(e => { if (!want.has(e)) layers[k].removeLayer(e.m); });
+    want.forEach(e => { if (!visibleLazy[k].has(e)) layers[k].addLayer(ensureMarker(e).setStyle(markerStyle(e))); });
+    visibleLazy[k] = want;
+    const chip = document.getElementById('f-'+k);
+    if (chip) chip.classList.toggle('far', show[k] && z < minZ);
+  });
+}
+map.on('moveend', refreshLazy);
+map.on('zoomend', () => { const r = dotSize(map.getZoom()); if (r !== R){ R = r; all.forEach(e => { if (e.m) e.m.setStyle(markerStyle(e)); }); } });
 map.fitBounds(L.latLngBounds(all.map(c=>[c.lat,c.lon])), {padding:[20,20]});
+refreshLazy();
 const selRing = L.circleMarker([0,0], {renderer, radius:12, weight:3, color:C.sel, fill:false, interactive:false});
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = colors(); all.forEach(ct=>ct.m.setStyle(markerStyle(ct))); selRing.setStyle({color:C.sel}); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { C = colors(); all.forEach(ct=>{ if (ct.m) ct.m.setStyle(markerStyle(ct)); }); selRing.setStyle({color:C.sel}); });
 
 // Filters
 ORDER.forEach(k => {
@@ -86,6 +118,8 @@ ORDER.forEach(k => {
   b.addEventListener('click', () => {
     show[k] = !show[k]; b.setAttribute('aria-pressed', show[k]);
     show[k] ? layers[k].addTo(map) : map.removeLayer(layers[k]);
+    refreshLazy();
+    if (show[k] && KINDS[k].minZoom && map.getZoom() < KINDS[k].minZoom) toast('Acerca el mapa para ver los ' + (k === 'apoyo' ? 'apoyos' : 'puntos') + '. El buscador los encuentra siempre.');
     runSearch();
   });
 });
@@ -143,7 +177,7 @@ const sheet = document.getElementById('sheet');
 let selected = null;
 function select(ct, fly){
   selected = ct; res.hidden = true; q.blur();
-  selRing.setLatLng([ct.lat, ct.lon]).addTo(map); ct.m.bringToFront();
+  selRing.setLatLng([ct.lat, ct.lon]).addTo(map); if (ct.m && map.hasLayer(ct.m)) ct.m.bringToFront();
   renderSheet(ct);
   const z = fly ? Math.max(map.getZoom(), 17) : map.getZoom();
   const wide = matchMedia('(min-width:760px)').matches;
