@@ -2,119 +2,24 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CCTT Granada</title>
-<meta name="description" content="Buscador de centros de transformación, elementos de maniobra y apoyos de MT con navegación hasta cada uno.">
-<meta name="theme-color" content="#1f5fbf">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="CCTT">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="lib/leaflet.css">
-<link rel="stylesheet" href="styles.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCTT Granada se ha mudado</title>
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=https://geocarede.github.io/">
+<link rel="canonical" href="https://geocarede.github.io/">
+<style>
+  :root{--bg:#eef1f4;--fg:#17212b;--accent:#1f5fbf}
+  @media (prefers-color-scheme: dark){:root{--bg:#10161d;--fg:#e6ebf0;--accent:#6ea2f0}}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding:24px;box-sizing:border-box;text-align:center}
+  a{color:var(--accent);font-weight:600}
+</style>
+<script>
+  // Lleva a la dirección nueva conservando la ruta (por ejemplo /admin/) y el enlace a un CT (#ct-…)
+  var resto = location.pathname.replace(/^\/GEO-CAR-EDE\/?/i, '');
+  location.replace('https://geocarede.github.io/' + resto + location.hash);
+</script>
 </head>
 <body>
-<div id="app">
-  <div id="map" role="application" aria-label="Mapa de centros de transformación"></div>
-
-  <div id="top">
-    <div class="searchbox">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" inputmode="search" autocomplete="off" spellcheck="false" placeholder="Código de CT, maniobra o apoyo" aria-label="Buscar centro de transformación, elemento de maniobra o apoyo">
-      <button class="iconbtn" id="clear" type="button" aria-label="Borrar búsqueda" hidden>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
-      </button>
-    </div>
-    <div class="filters">
-      <button class="chip" id="f-endesa" type="button" aria-pressed="true"><span class="dot" style="background:var(--endesa)"></span>Endesa <span class="n" id="n-endesa"></span></button>
-      <button class="chip" id="f-ext" type="button" aria-pressed="true"><span class="dot" style="background:var(--ext)"></span>Externos <span class="n" id="n-ext"></span></button>
-      <button class="chip" id="f-ddmm" type="button" aria-pressed="false" title="Se dibujan al acercar el mapa"><span class="dot" style="background:var(--ddmm)"></span>Maniobra <span class="n" id="n-ddmm"></span></button>
-      <button class="chip" id="f-apoyo" type="button" aria-pressed="false" title="Se dibujan al acercar el mapa"><span class="dot" style="background:var(--apoyo)"></span>Apoyos MT <span class="n" id="n-apoyo"></span></button>
-    </div>
-    <div id="results" hidden></div>
-  </div>
-
-  <div id="side">
-    <button class="iconbtn" id="b-sat" type="button" aria-label="Cambiar a vista satélite" title="Satélite">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>
-    </button>
-    <button class="iconbtn" id="b-loc" type="button" aria-label="Centrar en mi ubicación" title="Mi ubicación">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-    </button>
-    <button class="iconbtn" id="b-salir" type="button" aria-label="Cerrar sesión" title="Cerrar sesión">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></svg>
-    </button>
-  </div>
-
-  <div id="sheet" hidden aria-live="polite"></div>
-  <div id="tilenote" hidden>Sin conexión: el mapa de fondo no carga. El buscador y los puntos funcionan.</div>
-  <div id="toast" hidden></div>
-</div>
-
-<div id="acceso" hidden>
-  <div class="acceso-caja">
-    <div class="marca"><img src="icons/icon-192.png" alt="" width="44" height="44"><div><strong>CCTT Granada</strong><span>Localiza centros de transformación, maniobras y apoyos y navega hasta ellos.</span></div></div>
-    <div class="pestanas" role="tablist">
-      <button id="t-entrar" type="button" role="tab" aria-selected="true">Entrar</button>
-      <button id="t-solicitar" type="button" role="tab" aria-selected="false">Solicitar acceso</button>
-    </div>
-    <p id="acceso-aviso" role="status" hidden></p>
-
-    <div id="v-entrar">
-      <form id="f-entrar" autocomplete="on">
-        <label for="a-email">Email</label>
-        <input id="a-email" type="email" autocomplete="username" required>
-        <label for="a-clave">Clave</label>
-        <input id="a-clave" type="password" autocomplete="current-password" required>
-        <button class="navbtn primary" type="submit">Entrar</button>
-      </form>
-      <p class="hint">Cada clave funciona en un solo dispositivo: queda vinculada al primero en el que entres.</p>
-    </div>
-
-    <div id="v-solicitar" hidden>
-      <form id="f-solicitar">
-        <label for="s-nombre">Nombre</label>
-        <input id="s-nombre" type="text" autocomplete="name" maxlength="120">
-        <label for="s-email">Email</label>
-        <input id="s-email" type="email" autocomplete="email" required maxlength="254">
-        <label for="s-telefono">Teléfono</label>
-        <input id="s-telefono" type="tel" autocomplete="tel" required maxlength="30" placeholder="600 000 000">
-        <label for="s-mensaje">Mensaje <span class="opc">(opcional)</span></label>
-        <textarea id="s-mensaje" rows="2" maxlength="500"></textarea>
-        <input id="s-web" type="text" name="web" tabindex="-1" autocomplete="off" class="trampa" aria-hidden="true">
-        <button class="navbtn primary" type="submit">Enviar solicitud</button>
-      </form>
-      <p class="hint">Revisaremos tu solicitud y te enviaremos la clave.</p>
-    </div>
-
-    <div id="v-enviada" hidden>
-      <p class="ok">Solicitud enviada. Te contactaremos con tu clave de acceso.</p>
-      <div id="tg-enlace" hidden>
-        <p class="hint">Si usas Telegram, pulsa este botón y luego «Iniciar»: te responderemos por ahí, con las instrucciones de pago y tu clave.</p>
-        <a class="navbtn primary" id="tg-boton" href="#" target="_blank" rel="noopener">Recibir respuesta por Telegram</a>
-      </div>
-      <button id="otra-solicitud" class="navbtn" type="button">Ya tengo clave: entrar</button>
-    </div>
-  </div>
-</div>
-
-<script src="config.js"></script>
-<script src="lib/leaflet.js"></script>
-<script src="lib/supabase.js"></script>
-<script src="app.js"></script>
-<script src="acceso.js"></script>
-<script>
-if ('serviceWorker' in navigator){
-  // When a new version takes over, reload once so code and data match
-  const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloaded){ reloaded = true; location.reload(); } });
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).catch(() => {}));
-}
-</script>
+  <p>CCTT Granada se ha mudado a <a href="https://geocarede.github.io/">geocarede.github.io</a>.<br>Si no te lleva automáticamente, pulsa el enlace y vuelve a instalar la app desde allí.</p>
 </body>
 </html>

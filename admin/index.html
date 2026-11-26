@@ -2,148 +2,24 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Panel CCTT Granada</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCTT Granada se ha mudado</title>
 <meta name="robots" content="noindex">
-<link rel="icon" href="../icons/icon-192.png" type="image/png">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../styles.css">
+<meta http-equiv="refresh" content="0; url=https://geocarede.github.io/">
+<link rel="canonical" href="https://geocarede.github.io/">
 <style>
-/* Layout: una columna de secciones; tablas con scroll propio en móvil */
-html,body{height:auto}
-body{overflow:auto}
-main{max-width:1100px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
-header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-header.top h1{font-size:20px;margin:0;flex:1;letter-spacing:-.01em}
-header.top .quien{color:var(--muted);font-size:13px}
-section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
-section h2{font-size:15px;margin:0;display:flex;align-items:center;gap:8px}
-section h2 .cuenta{font:600 12px var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
-.vacio{color:var(--muted);font-size:14px;margin:0}
-.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);font:600 13px var(--sans);border-radius:9px;padding:8px 11px;cursor:pointer;white-space:nowrap}
-.btn:hover{filter:brightness(1.04)}
-.btn.prim{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
-.btn.peligro{color:var(--open-fg)}
-.btn:disabled{opacity:.55;cursor:wait}
-.btn:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input[type=text],input[type=email],input[type=tel],input[type=password],input[type=date]{font:15px var(--sans);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:8px 10px;min-width:0}
-.solis{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
-.soli{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;background:var(--bg)}
-.soli .nom{font-weight:600}
-.soli .dato{font-size:13.5px;overflow-wrap:anywhere}
-.soli .dato a{color:var(--accent)}
-.soli .msg{font-size:13px;color:var(--muted);font-style:italic}
-.soli .fecha{font-size:12px;color:var(--muted)}
-.soli .acc{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
-.soli .acc label{font-size:12px;color:var(--muted)}
-.tabla{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13.5px}
-th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-td .sub{display:block;color:var(--muted);font-size:12px;overflow-wrap:anywhere;max-width:260px}
-td.acc{white-space:nowrap}
-td.acc .btn{padding:6px 9px;font-size:12.5px;margin:0 4px 4px 0}
-.pill{display:inline-block;font:600 11.5px var(--sans);letter-spacing:.05em;padding:3px 8px;border-radius:6px;text-transform:uppercase}
-.pill.ok{background:var(--closed-bg);color:var(--closed-fg)}
-.pill.no{background:var(--open-bg);color:var(--open-fg)}
-.pill.neutro{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
-form.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
-form.fila .campo{display:flex;flex-direction:column;gap:4px;flex:1 1 160px}
-form.fila label{font-size:12px;color:var(--muted);font-weight:600}
-#clave-nueva{border:2px solid var(--accent);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
-#clave-nueva .clave{font:600 26px var(--mono);letter-spacing:.04em;user-select:all;overflow-wrap:anywhere}
-#clave-nueva .acc{display:flex;gap:8px;flex-wrap:wrap}
-#clave-nueva a.btn{text-decoration:none}
-.capas{display:flex;gap:8px;flex-wrap:wrap}
-.capas .pill{text-transform:none;letter-spacing:0;font-size:12.5px}
-#login{max-width:380px;margin:10vh auto 0;display:flex;flex-direction:column;gap:12px}
-#login form{display:flex;flex-direction:column;gap:8px}
-#aviso{margin:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:14px}
-#aviso.error{background:var(--open-bg);color:var(--open-fg);border-color:transparent}
-details summary{cursor:pointer;color:var(--muted);font-size:13.5px}
-.pago{display:flex;flex-direction:column;gap:8px}
-.pago textarea{font:15px/1.45 var(--sans);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box;resize:vertical}
-.pago textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-code{font:13px var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:0 4px}
+  :root{--bg:#eef1f4;--fg:#17212b;--accent:#1f5fbf}
+  @media (prefers-color-scheme: dark){:root{--bg:#10161d;--fg:#e6ebf0;--accent:#6ea2f0}}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding:24px;box-sizing:border-box;text-align:center}
+  a{color:var(--accent);font-weight:600}
 </style>
+<script>
+  // Lleva a la dirección nueva conservando la ruta (por ejemplo /admin/) y el enlace a un CT (#ct-…)
+  var resto = location.pathname.replace(/^\/GEO-CAR-EDE\/?/i, '');
+  location.replace('https://geocarede.github.io/' + resto + location.hash);
+</script>
 </head>
 <body>
-<main>
-  <p id="aviso" role="status" hidden></p>
-
-  <div id="login" hidden>
-    <h1 style="margin:0;font-size:20px">Panel de administración</h1>
-    <form id="f-login">
-      <input id="l-email" type="email" placeholder="Email" autocomplete="username" required>
-      <input id="l-clave" type="password" placeholder="Contraseña" autocomplete="current-password" required>
-      <button class="btn prim" type="submit">Entrar</button>
-    </form>
-  </div>
-
-  <div id="panel" hidden style="display:contents">
-    <header class="top">
-      <h1>Panel CCTT Granada</h1>
-      <span class="quien" id="quien"></span>
-      <button class="btn" id="b-recargar" type="button">Actualizar</button>
-      <button class="btn" id="b-salir" type="button">Salir</button>
-    </header>
-
-    <div id="clave-nueva" hidden></div>
-
-    <section>
-      <h2>Solicitudes pendientes <span class="cuenta" id="n-pend">0</span></h2>
-      <div class="solis" id="pendientes"></div>
-      <details>
-        <summary>Solicitudes ya resueltas</summary>
-        <div class="tabla"><table><thead><tr><th>Fecha</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Estado</th></tr></thead><tbody id="resueltas"></tbody></table></div>
-      </details>
-    </section>
-
-    <section>
-      <h2>Mensaje de pago</h2>
-      <p class="vacio">Es lo que envía el botón «💳 Enviar mensaje de pago» de Telegram. Pon cómo y cuánto se paga, y qué hacer después (por ejemplo, enviar el justificante por este mismo chat). Puedes usar <code>{nombre}</code> y se sustituirá por el nombre del solicitante.</p>
-      <form id="f-pago" class="pago">
-        <textarea id="p-texto" rows="6" maxlength="3000" placeholder="Hola {nombre}, para activar tu acceso…"></textarea>
-        <div><button class="btn prim" type="submit">Guardar mensaje</button></div>
-      </form>
-    </section>
-
-    <section>
-      <h2>Licencias <span class="cuenta" id="n-lic">0</span></h2>
-      <div class="tabla"><table>
-        <thead><tr><th>Usuario</th><th>Estado</th><th>Dispositivo</th><th>Último acceso</th><th>Caduca</th><th>Acciones</th></tr></thead>
-        <tbody id="licencias"></tbody>
-      </table></div>
-    </section>
-
-    <section>
-      <h2>Alta manual</h2>
-      <form class="fila" id="f-alta">
-        <div class="campo"><label for="m-email">Email</label><input id="m-email" type="email" required></div>
-        <div class="campo"><label for="m-nombre">Nombre</label><input id="m-nombre" type="text"></div>
-        <div class="campo"><label for="m-tel">Teléfono</label><input id="m-tel" type="tel"></div>
-        <div class="campo"><label for="m-caduca">Caduca (opcional)</label><input id="m-caduca" type="date"></div>
-        <button class="btn prim" type="submit">Crear y generar clave</button>
-      </form>
-    </section>
-
-    <section>
-      <h2>Ubicaciones</h2>
-      <p class="vacio" id="datos-fecha"></p>
-      <p class="vacio">Elige los KMZ (CCTT, elementos de maniobra y apoyos de MT). Solo se suben el código y la posición de cada elemento; el resto de datos de las fichas no sale de este ordenador.</p>
-      <form class="fila" id="f-datos">
-        <div class="campo"><label for="d-kmz">Archivos KMZ</label><input id="d-kmz" type="file" accept=".kmz,.kml" multiple required></div>
-        <button class="btn" type="submit" id="b-leer">Leer archivos</button>
-      </form>
-      <div class="capas" id="d-capas"></div>
-      <div><button class="btn prim" type="button" id="b-publicar" hidden>Publicar ubicaciones</button></div>
-    </section>
-  </div>
-</main>
-<script src="../config.js"></script>
-<script src="../lib/supabase.js"></script>
-<script src="../lib/jszip.min.js"></script>
-<script src="kmz.js"></script>
-<script src="admin.js"></script>
+  <p>CCTT Granada se ha mudado a <a href="https://geocarede.github.io/">geocarede.github.io</a>.<br>Si no te lleva automáticamente, pulsa el enlace y vuelve a instalar la app desde allí.</p>
 </body>
 </html>
